@@ -3,10 +3,10 @@ import os
 import sys
 import time
 from http import HTTPStatus
+import telegram
 
 import requests
 from dotenv import load_dotenv
-from telegram import Bot
 
 from exceptions import MessageNotSendError, VariableNotFoundError
 
@@ -97,7 +97,7 @@ def parse_status(homework):
 def main():
     """The main logic of the bot."""
     check_tokens()
-    bot = Bot(token=TELEGRAM_TOKEN)
+    bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
     homework_status = ''
     while True:
