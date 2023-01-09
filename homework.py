@@ -32,9 +32,7 @@ def check_tokens():
     necessary for the bot to work.
     """
     tokens = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
-    if not all(tokens):
-        logger.critical('Required variable is missing.')
-        raise VariableNotFoundError
+    return all(tokens)
 
 
 def send_message(bot, message):
@@ -98,15 +96,16 @@ def parse_status(homework):
 
 def main():
     """The main logic of the bot."""
-    check_tokens()
+    if not check_tokens():
+        logger.critical('Required variable is missing.')
+        raise VariableNotFoundError
     bot = Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
-    response = get_api_answer(timestamp)
-    check_response(response)
     homework_status = ''
-    message = ''
     while True:
         try:
+            response = get_api_answer(timestamp)
+            check_response(response)
             if len(response.get('homeworks')) != 0:
                 homework = response.get('homeworks')[0]
                 if homework_status != parse_status(homework):
@@ -118,9 +117,9 @@ def main():
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error('An error occurred while the bot was running.')
-
-    send_message(bot, message)
-    time.sleep(RETRY_PERIOD)
+            send_message(bot, message)
+        finally:    
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
