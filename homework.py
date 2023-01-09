@@ -110,13 +110,13 @@ def main():
                     homework_status = parse_status(homework)
                     send_message(bot, homework_status)
                 else:
-                    logger.debug('There is no new homwork status.')
+                    logger.debug('There is no new homework status.')
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error('An error occurred while the bot was running.')
             send_message(bot, message)
-
-    time.sleep(RETRY_PERIOD)
+        finally:
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
