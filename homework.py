@@ -30,7 +30,9 @@ HOMEWORK_VERDICTS = {
 def check_tokens():
     """Checks the availability of environment variables."""
     tokens = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
-    return all(tokens)
+    if not all(tokens):
+        logger.critical('Required variable is missing.')
+        raise VariableNotFoundError
 
 
 def send_message(bot, message):
@@ -94,9 +96,7 @@ def parse_status(homework):
 
 def main():
     """The main logic of the bot."""
-    if not check_tokens():
-        logger.critical('Required variable is missing.')
-        raise VariableNotFoundError
+    check_tokens()
     bot = Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
     homework_status = ''
@@ -116,8 +116,8 @@ def main():
             message = f'Сбой в работе программы: {error}'
             logger.error('An error occurred while the bot was running.')
             send_message(bot, message)
-        finally:
-            time.sleep(RETRY_PERIOD)
+
+    time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
