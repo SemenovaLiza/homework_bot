@@ -46,7 +46,7 @@ def send_message(bot, message):
         logger.error('A "MessageNotSendError"'
                      'error occurred while sending the message.')
     except Exception as error:
-        logger.error(f'A "{error}" error occurred when sending the message.')
+        logger.error(f'A "{error}" error occurred while sending the message.')
 
 
 def get_api_answer(timestamp):
