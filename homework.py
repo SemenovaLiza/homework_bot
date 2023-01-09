@@ -28,10 +28,7 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens():
-    """
-    Checks the availability of environment variables
-    necessary for the bot to work.
-    """
+    """Checks the availability of environment variables."""
     tokens = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
     return all(tokens)
 
