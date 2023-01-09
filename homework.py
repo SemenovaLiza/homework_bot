@@ -118,7 +118,7 @@ def main():
             message = f'Сбой в работе программы: {error}'
             logger.error('An error occurred while the bot was running.')
             send_message(bot, message)
-        finally:    
+        finally:
             time.sleep(RETRY_PERIOD)
 
 
