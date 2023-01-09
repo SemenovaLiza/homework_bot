@@ -108,8 +108,7 @@ def main():
                 homework = response.get('homeworks')[0]
                 if homework_status != parse_status(homework):
                     homework_status = parse_status(homework)
-                    message = homework_status
-                    send_message(bot, message)
+                    send_message(bot, homework_status)
                 else:
                     logger.debug('There is no new homwork status.')
         except Exception as error:
