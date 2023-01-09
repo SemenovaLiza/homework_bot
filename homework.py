@@ -3,9 +3,9 @@ import os
 import sys
 import time
 from http import HTTPStatus
-import telegram
 
 import requests
+import telegram
 from dotenv import load_dotenv
 
 from exceptions import MessageNotSendError, VariableNotFoundError
