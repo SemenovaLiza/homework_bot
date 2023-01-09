@@ -108,7 +108,7 @@ def main():
     while True:
         try:
             if len(response.get('homeworks')) != 0:
-                homework = response.get('homworks')[0]
+                homework = response.get('homeworks')[0]
                 if homework_status != parse_status(homework):
                     homework_status = parse_status(homework)
                     message = homework_status
