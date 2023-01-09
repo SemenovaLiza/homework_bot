@@ -61,7 +61,7 @@ def get_api_answer(timestamp):
 
     if response.status_code != HTTPStatus.OK:
         raise requests.HTTPError
-        logger.error('A HTTP error occurred.')
+        logger.error('An HTTP error occurred.')
 
     response = response.json()
     return response
