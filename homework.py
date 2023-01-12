@@ -8,9 +8,13 @@ import requests
 import telegram
 from dotenv import load_dotenv
 
-from exceptions import MessageNotSendError, VariableNotFoundError
+import exceptions
 
 load_dotenv()
+
+logger = logging.getLogger()
+logger.setLevel(logging.ERROR)
+handler = logging.StreamHandler(stream=sys.stdout)
 
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -29,40 +33,58 @@ HOMEWORK_VERDICTS = {
 
 def check_tokens():
     """Checks the availability of environment variables."""
-    tokens = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
-    if not all(tokens):
-        logger.critical('Required variable is missing.')
-        raise VariableNotFoundError
+    return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
 def send_message(bot, message):
     """Sends a message to Telegram chat."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
-        logger.debug('A message was sent to Telegram chat.')
-    except MessageNotSendError:
-        logger.error('A "MessageNotSendError"'
-                     'error occurred while sending the message.')
+        logger.debug(
+            f'A message "{message}" was successfully'
+            f'sent to user {TELEGRAM_CHAT_ID}.'
+        )
     except Exception as error:
-        logger.error(f'A "{error}" error occurred while sending the message.')
+        logger.error(
+            f'A message "{message}" was not'
+            f'sent to the user {TELEGRAM_CHAT_ID}.'
+            f'An {error} occurred.'
+        )
+        raise exceptions.MessageNotSendError(
+            (f'A message could not be sent.'
+             f'A message context: {message}.'
+             f'Telegram chat id: {TELEGRAM_CHAT_ID}'),
+            exc_info=True
+        )
 
 
 def get_api_answer(timestamp):
     """Makes a request to the API service."""
-    params = {'from_date': timestamp}
+    request_params = {
+        'url': ENDPOINT,
+        'headers': HEADERS,
+        'params': {'from_date': timestamp}
+    }
+    error_message = (
+        'Failed to connect to the "{url}".'
+        'Authorization token: {headers}.'
+        'Request param: {params}.'.format(**request_params),
+    )
+    status_code = 'Response status code: {}'
     try:
-        response = requests.get(ENDPOINT, headers=HEADERS, params=params)
+        response = requests.get(**request_params)
     except requests.RequestException:
-        logger.error('An error occurred while handling request.')
-    except requests.ConnectionError:
-        logger.error('A connection error occurred.')
-    except Exception as error:
-        logger.error(f'A {error} occurred.')
-
+        raise requests.RequestException(
+            error_message,
+            status_code.format(response.status_code),
+            exc_info=True
+        )
     if response.status_code != HTTPStatus.OK:
-        raise requests.HTTPError
-        logger.error('An HTTP error occurred.')
-
+        raise requests.HTTPError(
+            error_message,
+            status_code.format(response.status_code),
+            exc_info=True
+        )
     response = response.json()
     return response
 
@@ -70,53 +92,68 @@ def get_api_answer(timestamp):
 def check_response(response):
     """Checks the response for compliance with the documentation."""
     if type(response) != dict:
-        raise TypeError
-        logger.error('Unexpected response type.')
+        raise TypeError(
+            'A type of the response differs from the expected one.'
+            'Expected: dict',
+            exc_info=True
+        )
     if type(response.get('homeworks')) != list:
-        raise TypeError
-        logger.error('Unexpected response.key type.')
+        raise TypeError(
+            'A type of the response key "homeworks" differs from the'
+            'expected one. Expected: list',
+            exc_info=True
+        )
 
 
 def parse_status(homework):
     """Extracts the status and name of homework from response."""
-    try:
-        homework_name = homework.get('homework_name')
-        status = homework.get('status')
-        verdict = HOMEWORK_VERDICTS[status]
-    except KeyError:
-        logger.error('There is no "status" key in the response.')
+    homework_name = homework.get('homework_name')
     if 'homework_name' not in homework:
-        raise KeyError
-        logger.error('There is no "homwork_name" key in the response.')
+        raise KeyError(
+            'There is no necessary "homework_name" key in the response',
+            exc_info=True
+        )
+    status = homework.get('status')
+    if 'status' not in homework:
+        raise KeyError(
+            'There is no necessary "status" key in the response',
+            exc_info=True)
     if status not in HOMEWORK_VERDICTS:
-        logger.error('An unexpected "status" key value.')
-        raise KeyError
+        raise KeyError(
+            'undocumented homework status',
+            exc_info=True)
+    verdict = HOMEWORK_VERDICTS[status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
 def main():
     """The main logic of the bot."""
-    check_tokens()
-    bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    timestamp = int(time.time())
-    homework_status = ''
-    while True:
-        try:
-            response = get_api_answer(timestamp)
-            check_response(response)
-            if len(response.get('homeworks')) != 0:
-                homework = response.get('homeworks')[0]
-                if homework_status != parse_status(homework):
-                    homework_status = parse_status(homework)
-                    send_message(bot, homework_status)
-                else:
-                    logger.debug('There is no new homework status.')
-        except Exception as error:
-            message = f'Сбой в работе программы: {error}'
-            logger.error('An error occurred while the bot was running.')
-            send_message(bot, message)
-        finally:
-            time.sleep(RETRY_PERIOD)
+    if not check_tokens():
+        logger.critical('Required variable is missing.'
+                        'The program is stopped.')
+        sys.exit('Required variable is missing.')
+    else:
+        bot = telegram.Bot(token=TELEGRAM_TOKEN)
+        timestamp = int(time.time())
+        homework_status = ''
+        while True:
+            try:
+                response = get_api_answer(timestamp)
+                timestamp = response.get('current_date')
+                check_response(response)
+                if response.get('homeworks'):
+                    homework = response.get('homeworks')[0]
+                    if homework_status != parse_status(homework):
+                        homework_status = parse_status(homework)
+                        send_message(bot, homework_status)
+                    else:
+                        logger.debug('There is no new homework status.')
+            except Exception as error:
+                message = f'Сбой в работе программы: {error}'
+                logger.error('An error occurred while the bot was running.')
+                send_message(bot, message)
+            finally:
+                time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
@@ -126,6 +163,3 @@ if __name__ == '__main__':
         format='%(asctime)s, %(levelname)s, %(message)s'
     )
     main()
-logger = logging.getLogger()
-logger.setLevel(logging.ERROR)
-handler = logging.StreamHandler(stream=sys.stdout)
