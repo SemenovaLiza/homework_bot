@@ -44,12 +44,7 @@ def send_message(bot, message):
             f'A message "{message}" was successfully'
             f'sent to user {TELEGRAM_CHAT_ID}.'
         )
-    except Exception as error:
-        logger.error(
-            f'A message "{message}" was not'
-            f'sent to the user {TELEGRAM_CHAT_ID}.'
-            f'An {error} occurred.'
-        )
+    except Exception:
         raise exceptions.MessageNotSendError(
             (f'A message could not be sent.'
              f'A message context: {message}.'
