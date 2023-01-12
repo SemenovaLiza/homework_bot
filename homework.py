@@ -47,7 +47,7 @@ def send_message(bot, message):
     except Exception:
         raise exceptions.MessageNotSendError(
             (f'A message could not be sent.'
-             f'A message context: {message}.'
+             f'Message context: {message}.'
              f'Telegram chat id: {TELEGRAM_CHAT_ID}'),
             exc_info=True
         )
