@@ -68,14 +68,14 @@ def get_api_answer(timestamp):
     status_code = 'Response status code: {}'
     try:
         response = requests.get(**request_params)
+        if response.status_code != HTTPStatus.OK:
+            raise requests.HTTPError(
+                error_message,
+                status_code.format(response.status_code),
+                exc_info=True
+            )
     except requests.RequestException:
         raise requests.RequestException(
-            error_message,
-            status_code.format(response.status_code),
-            exc_info=True
-        )
-    if response.status_code != HTTPStatus.OK:
-        raise requests.HTTPError(
             error_message,
             status_code.format(response.status_code),
             exc_info=True
@@ -88,13 +88,13 @@ def check_response(response):
     """Checks the response for compliance with the documentation."""
     if type(response) != dict:
         raise TypeError(
-            'A type of the response differs from the expected one.'
+            'A type of response differs from the expected one.'
             'Expected: dict',
             exc_info=True
         )
     if type(response.get('homeworks')) != list:
         raise TypeError(
-            'A type of the response key "homeworks" differs from the'
+            'A type of response key "homeworks" differs from the'
             'expected one. Expected: list',
             exc_info=True
         )
@@ -115,7 +115,7 @@ def parse_status(homework):
             exc_info=True)
     if status not in HOMEWORK_VERDICTS:
         raise KeyError(
-            'undocumented homework status',
+            'Undocumented homework status.',
             exc_info=True)
     verdict = HOMEWORK_VERDICTS[status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
