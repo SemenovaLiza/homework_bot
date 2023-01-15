@@ -45,8 +45,8 @@ def send_message(bot, message):
             f'sent to user {TELEGRAM_CHAT_ID}.'
         )
     except Exception:
-        logger.error(f'A message "{message}"'
-                     f'could not be sent to user {TELEGRAM_CHAT_ID}.')
+        logger.error('An MessageNotSend error occurred'
+                     'while sending a message.')
         raise exceptions.MessageNotSendError(
             (f'A message could not be sent.'
              f'Message context: {message}.'
@@ -62,24 +62,22 @@ def get_api_answer(timestamp):
         'headers': HEADERS,
         'params': {'from_date': timestamp}
     }
-    error_message = (
-        'Failed to connect to the "{url}".'
-        'Authorization token: {headers}.'
-        'Request param: {params}.'.format(**request_params),
-    )
-    status_code = 'Response status code: {}'
     try:
         response = requests.get(**request_params)
         if response.status_code != HTTPStatus.OK:
             raise requests.HTTPError(
-                error_message,
-                status_code.format(response.status_code),
+                'Failed to connect to the "{url}".'
+                'Authorization token: {headers}.'
+                'Request param: {params}.'.format(**request_params),
+                f'Response status code: {response.status_code}',
                 exc_info=True
             )
     except requests.RequestException:
-        raise requests.RequestException(
-            error_message,
-            status_code.format(response.status_code),
+        raise exceptions.InvalidStatusCode(
+            'Failed to connect to the "{url}".'
+            'Authorization token: {headers}.'
+            'Request param: {params}.'.format(**request_params),
+            f'Response status code: {response.status_code}',
             exc_info=True
         )
     response = response.json()
