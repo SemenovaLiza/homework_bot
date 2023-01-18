@@ -35,6 +35,7 @@ Create .env file and make in it such variables as:
 - A profile token on Yandex Practicum.
 - A token of your telegram-bot.
 - Your ID in the telegram.
+
 *Example of required variables in an .env file.*
 ```
 PRACTICUM_TOKEN='XXXXX'
