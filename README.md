@@ -1,4 +1,12 @@
 # homework_bot
+
+![Python](https://img.shields.io/badge/Python-3.7-blue)
+![Pytest](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square&logo=pytest)!
+![Python-dotenv](https://img.shields.io/badge/Python--dotenv-0.19.0-brightgreen)
+![Python-telegram-bot](https://img.shields.io/badge/Python--telegram--bot-13.7-blueviolet)
+![Status](https://img.shields.io/badge/status-finished-green?style=flat-square)
+
+
 ### *Description*
 A homework_bot accesses the API of the Yandex Practicum and learns the status of the student's homework. In case of a change in the status of the homework, bot informs student in his telegram chat.
 ### *Technologies*
